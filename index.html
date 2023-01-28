@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Data Table</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- <link rel="stylesheet" href="styles.css"> -->
+</head>
+<style>
+    table {
+      margin: 0 auto; /* center the table */
+      border-collapse: collapse; /* remove the cell spacing */
+      width: 80%;
+      overflow-y: scroll;
+    max-height: 300px; /* set the table width */
+    }
+    th, td {
+      border: 1px solid #dddddd; /* add a border to the cells */
+      padding: 8px; /* add padding to the cells */
+      text-align: left; /* align the text to the left */
+    }
+    th {
+      background-color: #dddddd; /* add a background color to the header cells */
+    }
+    #submit-button{
+      margin: 10px 200px 0 100px; 
+      background-color:rgb(165, 230, 165); 
+      /* border-radius: 10px;  */
+      /* padding: 10px;  */
+      margin-left: 0;
+      margin-right: 0;
+      height: 30px;
+      width: 360px;
+      text-align: center;
+    }
+    .delete-button{
+      position: relative;
+      left: 150px;
+      background-color: rgb(220, 16, 16);
+      padding: 10px;
+    }
+    #table-body{
+      height: 100px;
+      width: 100px;
+    }
+  </style>
+  
+<body >
+    <div style="display: flex; flex-direction: column ;align-items: center; justify-content: center; height: 100vh;">
+        <!-- your HTML code here -->
+        <form >
+            <label for="name-input" style="display: block;margin-bottom: 10px;">Person's Name</label>
+            <input type="text" id="name-input" style="padding :5px; margin-bottom: 5px;">
+            <input type="text" id="name-input2" style="padding :5px;">
+            <br>
+            <label for="age-input" style="display: block; margin-bottom: 5px;">Contact number</label>
+            <input type="text" id="age-input" style="padding :5px; margin-top: 5px; width:350px;">
+            <br>
+            <button id="submit-button">Save</button>
+          </form>
+          <br>
+          <form>
+            <input type="text" id="search-input" style="width: 275px; margin-right: 10px; border-radius: 5px;">
+            <button id="search-button" style="border-radius: 5px;">Search</button>
+          </form>
+          <br>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 100px; height:100px; text-align: center;">SN.</th>
+                <th id="name-header" style="text-align :center">Name</th>
+                <th style="text-align :center">Age</th>
+                <th style="text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+          </table>
+      </div>
+  <script>
+  var serialNumber = 1;
+    // Handle form submission
+    $("#submit-button").click(function() {
+      var found=true;
+      $("#table-body tr td:nth-child(2)").filter(function() {
+        if($(this).text().toLowerCase() === ($("#name-input").val()+" "+$("#name-input2").val()).toLowerCase()){
+           alert("DUPLICATE NAME!");
+           found=false;
+        }
+      });
+      $("#table-body tr td:nth-child(3)").filter(function() {
+        if($(this).text().toLowerCase() === ($("#age-input").val()).toLowerCase()){
+           alert("DUPLICATE CONTACT NUMBER!");
+           found=false;
+        }
+      });
+      if(found){
+      var name = $("#name-input").val();
+      var name2=$("#name-input2").val();
+      var age = $("#age-input").val();
+      var rows = $("#table-body tr");
+  var serialNumber = rows.length + 1;
+      // var newRow = "<tr><td>" + serialNumber + "</td><td>" + name + "</td><td>" + age + "</td></tr>";
+      var newRow = "<tr><td>" + serialNumber + "</td><td>" + name +" "+ name2 + "</td><td>" + age + '</td><td><button class="delete-button">x</button></td></tr>';
+      if(name&&age){
+      $("#table-body").append(newRow);
+      }
+      else{
+        alert("give full details")
+      }
+      localStorage.setItem("tableData", $("#table-body").html());
+    }
+    });
+//     function deleteRow(btn) {
+//   var row = btn.parentNode.parentNode;
+//   row.parentNode.removeChild(row);
+//   localStorage.setItem("tableData", $("#table-body").html());
+// }
+$(document).on('click', '.delete-button', function() {
+  // Get the row that contains the delete button that was clicked
+  var row = $(this).closest('tr');
+  // Get the serial number of the deleted row
+  var deletedSerialNumber = row.find('td:first-child').text();
+  // Remove the row
+  row.remove();
+  // Update the serial numbers of all the rows after the deleted row
+  $("#table-body tr td:first-child").filter(function() {
+    if ($(this).text() > deletedSerialNumber) {
+      $(this).text(parseInt($(this).text()) - 1);
+    }
+  });
+  // Remove the deleted row from local storage
+  var storedData = localStorage.getItem("tableData");
+  var index = storedData.indexOf(row[0].outerHTML);
+  storedData = storedData.substring(0, index) + storedData.substring(index + row[0].outerHTML.length);
+  localStorage.setItem("tableData", storedData);
+  alert("delete element!");
+});
+
+
+    // Retrieve stored data and populate table on page load
+    $(document).ready(function() {
+      var storedData = localStorage.getItem("tableData");
+      if (storedData) {
+        $("#table-body").html(storedData);
+        var rows = $("#table-body tr");
+        serialNumber = rows.length + 1;
+      }
+    });
+    // handle search by name
+    $("#search-button").click(function(event){
+    event.preventDefault();
+    var searchValue = $("#search-input").val();
+    var found = false;
+    $("#table-body tr td:nth-child(2)").filter(function() {
+        if($(this).text().toLowerCase() === searchValue.toLowerCase()){
+            $(this).parent().show();
+            found = true;
+        }else{
+            $(this).parent().hide();
+        }
+    });
+    if(!found){
+        alert("Not Found");
+    }
+});
+// Add event listener to "Name" header
+$("#name-header").click(function() {
+  // Get all rows of the table
+  var rows = $("#table-body tr");
+  // Sort the rows based on the name column
+  rows.sort(function(a, b) {
+    var nameA = $(a).find("td:nth-child(2)").text().toUpperCase();
+    var nameB = $(b).find("td:nth-child(2)").text().toUpperCase();
+    if (nameA < nameB) {
+      return -1;
+    }
+    if (nameA > nameB) {
+      return 1;
+    }
+    return 0;
+  });
+  // Re-append the rows to the table body
+  $("#table-body").html(rows);
+});
+
+
+
+    </script>
+</body>
+</html>
